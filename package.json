@@ -1,0 +1,21 @@
+{
+  "name": "replaced-by-user-input",
+  "description": "replaced-by-user-input",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.442.0",
+    "dotenv": "^8.2.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "sharp": "^0.25.4"
+  },
+  "devDependencies": {
+    "aws-sdk-mock": "^4.5.0",
+    "jest": "^24.7.1"
+  },
+  "scripts": {
+    "test": "jest",
+    "sam:build": "sam build S3ResizeImageFunction",
+    "sam:test": "sam local invoke 'S3ResizeImageFunction' -e event.json"
+  }
+}
