@@ -22,24 +22,17 @@ exports.resizeImage = async (event, context) => {
       const allSizes = process.env.ALL_SIZE.split(',');
       console.log(sourceKey);
       try {
-        const params = {
-          Bucket: process.env.BUCKET,
-          Key: sourceKey,
-        };
-
-        console.log('3');
-        const originalImage = await s3.getObject(params).promise();
-        console.log('4\n' + 'Total size:' + allSizes.length);
+        const originalImage = await getImage(sourceKey);
+        console.log('4 ' + 'Total size:' + allSizes.length);
         let count = 1;
 
         const processImage = allSizes.map((size) => {
           const { width, height } = takeSize(size);
-          console.log(count++ + '  ' + width + 'x' + height);
+          // console.log(count++ + '  ' + width + 'x' + height);
           return handle(originalImage.Body, width, height, nameFile);
         });
 
         await Promise.all(processImage);
-
         console.log('successful');
       } catch (error) {
         console.error(error);
@@ -50,9 +43,9 @@ exports.resizeImage = async (event, context) => {
 
 function takeSize(size) {
   const [width, height] = size.split('x');
+  console.log("take size: "+width+"x"+height);
   return { width: Number(width), height: Number(height) };
 }
-
 function validFile(sourceKey) {
   const typeMatch = sourceKey.match(/\.([^.]*)$/);
   if (!typeMatch) {
@@ -66,7 +59,14 @@ function validFile(sourceKey) {
   }
   return true;
 }
-
+function getImage(sourceKey) {
+  const params = {
+    Bucket: process.env.BUCKET,
+    Key: sourceKey,
+  };
+  console.log('3');
+  return s3.getObject(params).promise();
+}
 async function handle(body, width, height, nameFile) {
   const buffer = await sharp(body).resize(width, height).toBuffer();
   const targetKey = `resized/${width}x${height}/` + nameFile;
@@ -76,5 +76,6 @@ async function handle(body, width, height, nameFile) {
     Body: buffer,
     ContentType: 'image',
   };
+  console.log(width + 'x' + height);
   return s3.putObject(targetParams).promise();
 }
