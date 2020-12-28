@@ -23,28 +23,37 @@ exports.resizeImage = async (event, context) => {
       console.log(sourceKey);
       try {
         const originalImage = await getImage(sourceKey);
-        console.log('4 ' + 'Total size:' + allSizes.length);
+        console.log('4 ' + 'Total size: ' + allSizes.length);
 
-        const processImage = Promise.all(
-          allSizes.map((size) => takeSize(size))
-        ).then((data) => {
-          return Promise.all(data.map((size) => handleImage(originalImage.Body, size)))
+        const sizes = allSizes.map((size) => takeSize(size));
+        const imagesProcessed = await Promise.all(
+          sizes.map((size) => {
+            return handleImage(originalImage.Body, size);
+          }),
+        );
+        console.log("resized");
+        const dataMapping = sizes.map((size, index) => {
+          return {
+            targetKey: `resized/${size.width}x${size.height}/` + nameFile,
+            buffer: imagesProcessed[index],
+          };
         });
-
-        processImage.then((data) => {
-          console.log(data);
-        });
+        console.log("mapping");
+        const imagesPut = await Promise.all(dataMapping.map(data => {
+          return putImage(data.buffer, data.targetKey)
+        }));
         console.log('successful');
       } catch (error) {
-        console.error(error);
+        console.log(error);
+        return;
       }
     }
   }
+  return;
 };
 
 function takeSize(size) {
   const [width, height] = size.split('x');
-  console.log('take size: ' + width + 'x' + height);
   return { width: Number(width), height: Number(height) };
 }
 function validFile(sourceKey) {
@@ -69,21 +78,17 @@ function getImage(sourceKey) {
   return s3.getObject(params).promise();
 }
 function handleImage(body, size) {
-  // return new Promise(resolve => resolve(
-  return sharp(body)
-      .resize(size.width, size.height)
-      .toBuffer()
-  // ))
+  // return new Promise((resolve) =>{
+  //   return resolve(sharp(body).resize(size.width, size.height).toBuffer())
+  // });
+  return sharp(body).resize(size.width, size.height).toBuffer();
 }
-async function handle(body, width, height, nameFile) {
-  const buffer = await sharp(body).resize(width, height).toBuffer();
-  const targetKey = `resized/${width}x${height}/` + nameFile;
+function putImage(body, targetKey) {
   const targetParams = {
     Bucket: process.env.BUCKET,
     Key: targetKey,
-    Body: buffer,
+    Body: body,
     ContentType: 'image',
   };
-  console.log(width + 'x' + height);
   return s3.putObject(targetParams).promise();
 }
