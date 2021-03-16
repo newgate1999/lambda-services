@@ -19,6 +19,8 @@ exports.resizeImage = async (event, context) => {
     console.log('2');
     if (validFile(sourceKey)) {
       const nameFile = path.basename(sourceKey);
+      const sourceKeyArr = sourceKey.split('/');
+      const profile = sourceKeyArr[1];
       const allSizes = process.env.ALL_SIZE.split(',');
       console.log(sourceKey);
       try {
@@ -34,7 +36,7 @@ exports.resizeImage = async (event, context) => {
         console.log("resized");
         const dataMapping = sizes.map((size, index) => {
           return {
-            targetKey: `resized/${size.width}x${size.height}/` + nameFile,
+            targetKey: `RESIZED/PROFILE/` + profile + `/${size.width}x${size.height}/`+ nameFile,
             buffer: imagesProcessed[index],
           };
         });

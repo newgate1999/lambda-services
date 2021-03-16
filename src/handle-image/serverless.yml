@@ -1,27 +1,27 @@
-service: handle-image
+service: zotahome-resize-image1
 # app and org for use with dashboard.serverless.com
-app: lambda-services
-org: dolong
+app: zotahome-resize-image1
+org: newgate
 frameworkVersion: '2'
 
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: dev
+  stage: dev1
   region: us-east-1
   memorySize: 128
   environment: 
     ALL_SIZE: 56x56,128x128,168x168,264x264,300x300,411x411,616x616,590x400,750x360,750x372,1242x616,1242x596,372x750,500x750,616x1242,828x1242
-    BUCKET: coxude-images
+    BUCKET: zotahome-demo-resizeimage
 package:
   include: ../../node_modules/**
 functions:
-  resize-image:
+  handler-resize-image:
     handler: resize-handler.resizeImage 
     events:
       - s3:
-          bucket: coxude-images
+          bucket: zotahome-demo-resizeimage
           event: s3:ObjectCreated:*
           rules:
-            - prefix: default/
+            - prefix: PROFILE/1/
           existing: true
